@@ -458,7 +458,15 @@ public class Timer
 
             foreach (Timer timer in this._timers)
             {
-                timer.Update();
+                try
+                {
+                    timer.Update();
+                }
+                catch (Exception ex)
+                {
+                    Debug.LogError(ex.ToString());
+                    continue;
+                }
             }
 
             this._timers.RemoveAll(t => t.isDone);

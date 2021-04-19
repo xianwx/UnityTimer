@@ -422,7 +422,11 @@ public class Timer
 
         if (this._onUpdate != null)
         {
-            this._onUpdate(this.GetTimeElapsed());
+            this._onUpdate(
+                this.duration == 0 ?
+                this.GetTimeElapsed() :
+                this.GetTimeElapsed() / this.duration
+            );
         }
 
         if (this.GetWorldTime() >= this.GetFireTime())

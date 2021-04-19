@@ -120,6 +120,7 @@ public class Timer
             {
                 GameObject managerObject = new GameObject { name = "TimerManager" };
                 Timer._manager = managerObject.AddComponent<TimerManager>();
+                GameObject.DontDestroyOnLoad(managerObject);
             }
         }
 

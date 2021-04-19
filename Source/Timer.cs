@@ -377,12 +377,6 @@ public class Timer
 
         if (this.GetWorldTime() >= this.GetFireTime())
         {
-
-            if (this._onComplete != null)
-            {
-                this._onComplete();
-            }
-
             if (this.isLooped)
             {
                 this._startTime = this.GetWorldTime();
@@ -390,6 +384,11 @@ public class Timer
             else
             {
                 this.isCompleted = true;
+            }
+
+            if (this._onComplete != null)
+            {
+                this._onComplete();
             }
         }
     }

@@ -20,9 +20,24 @@ public static class TimerExtensions
     /// <param name="useRealTime">Whether the timer uses real-time(not affected by slow-mo or pausing) or
     /// game-time(affected by time scale changes).</param>
     public static Timer AttachTimer(this MonoBehaviour behaviour, float duration, Action onComplete,
-        Action<float> onUpdate = null, bool isLooped = false, bool useRealTime = false)
+        Action<float> onUpdate = null, bool isLooped = false, bool useRealTime = false, bool pauseInOwnerHide = true)
     {
-        return Timer.Register(duration, onComplete, onUpdate, isLooped, useRealTime, behaviour);
+        return Timer.Register(duration, onComplete, onUpdate, isLooped, useRealTime, behaviour, pauseInOwnerHide);
+    }
+
+    public static void CancelAllTimer(this MonoBehaviour behaviour)
+    {
+        Timer.CancelAllRegisteredTimers(behaviour);
+    }
+
+    public static void PauseAllTimer(this MonoBehaviour behaviour)
+    {
+        Timer.PauseAllRegisteredTimers(behaviour);
+    }
+
+    public static void ResumeAllTimer(this MonoBehaviour behaviour)
+    {
+        Timer.ResumeAllRegisteredTimers(behaviour);
     }
 }
 }

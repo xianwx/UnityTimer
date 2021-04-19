@@ -44,12 +44,27 @@ public class Timer
     /// </summary>
     public bool usesRealTime { get; private set; }
 
+    public bool pauseInOwnerHide { get; set; }
+
     /// <summary>
     /// Whether the timer is currently paused.
     /// </summary>
     public bool isPaused
     {
-        get { return this._timeElapsedBeforePause.HasValue; }
+        get
+        {
+            if (this._timeElapsedBeforePause.HasValue)
+                return true;
+
+            if (this._hasAutoDestroyOwner && this.pauseInOwnerHide)
+            {
+                if (this._autoDestroyOwner == null) return false;
+
+                if (!this._autoDestroyOwner.gameObject.activeSelf) return true;
+            }
+
+            return false;
+        }
     }
 
     /// <summary>
@@ -91,7 +106,7 @@ public class Timer
     /// after the parent has been destroyed.</param>
     /// <returns>A timer object that allows you to examine stats and stop/resume progress.</returns>
     public static Timer Register(float duration, Action onComplete, Action<float> onUpdate = null,
-        bool isLooped = false, bool useRealTime = false, MonoBehaviour autoDestroyOwner = null)
+        bool isLooped = false, bool useRealTime = false, MonoBehaviour autoDestroyOwner = null, bool pauseInOwnerHide = true)
     {
         // create a manager object to update all the timers if one does not already exist.
         if (Timer._manager == null)
@@ -109,6 +124,7 @@ public class Timer
         }
 
         Timer timer = new Timer(duration, onComplete, onUpdate, isLooped, useRealTime, autoDestroyOwner);
+        timer.pauseInOwnerHide = pauseInOwnerHide;
         Timer._manager.RegisterTimer(timer);
         return timer;
     }
@@ -163,7 +179,29 @@ public class Timer
         // need to do anything in this case
     }
 
+    public static void CancelAllRegisteredTimers(MonoBehaviour behaviour)
+    {
+        if (Timer._manager != null)
+        {
+            Timer._manager.CancelAllTimers(behaviour);
+        }
+
+        // if the manager doesn't exist, we don't have any registered timers yet, so don't
+        // need to do anything in this case
+    }
+
     public static void PauseAllRegisteredTimers()
+    {
+        if (Timer._manager != null)
+        {
+            Timer._manager.PauseAllTimers();
+        }
+
+        // if the manager doesn't exist, we don't have any registered timers yet, so don't
+        // need to do anything in this case
+    }
+
+    public static void PauseAllRegisteredTimers(MonoBehaviour behaviour)
     {
         if (Timer._manager != null)
         {
@@ -179,6 +217,17 @@ public class Timer
         if (Timer._manager != null)
         {
             Timer._manager.ResumeAllTimers();
+        }
+
+        // if the manager doesn't exist, we don't have any registered timers yet, so don't
+        // need to do anything in this case
+    }
+
+    public static void ResumeAllRegisteredTimers(MonoBehaviour behaviour)
+    {
+        if (Timer._manager != null)
+        {
+            Timer._manager.ResumeAllTimers(behaviour);
         }
 
         // if the manager doesn't exist, we don't have any registered timers yet, so don't
@@ -425,6 +474,21 @@ public class Timer
             this._timersToAdd = new List<Timer>();
         }
 
+        public void CancelAllTimers(MonoBehaviour behaviour)
+        {
+            foreach (Timer timer in this._timers)
+            {
+                if (timer._hasAutoDestroyOwner && timer._autoDestroyOwner == behaviour)
+                {
+                    timer.Cancel();
+                }
+            }
+
+            // dont RemoveAll(t => t.isDone) because this may be call by timer arrive
+            // remove list item will throw "Collection was modified;" 
+            // items will been removed in next frame at least
+        }
+
         public void PauseAllTimers()
         {
             foreach (Timer timer in this._timers)
@@ -433,11 +497,33 @@ public class Timer
             }
         }
 
+        public void PauseAllTimers(MonoBehaviour behaviour)
+        {
+            foreach (Timer timer in this._timers)
+            {
+                if (timer._hasAutoDestroyOwner && timer._autoDestroyOwner == behaviour)
+                {
+                    timer.Pause();
+                }
+            }
+        }
+
         public void ResumeAllTimers()
         {
             foreach (Timer timer in this._timers)
             {
                 timer.Resume();
+            }
+        }
+
+        public void ResumeAllTimers(MonoBehaviour behaviour)
+        {
+            foreach (Timer timer in this._timers)
+            {
+                if (timer._hasAutoDestroyOwner && timer._autoDestroyOwner == behaviour)
+                {
+                    timer.Resume();
+                }
             }
         }
 
